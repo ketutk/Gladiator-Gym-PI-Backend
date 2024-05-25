@@ -53,7 +53,7 @@ model Member {
   name       String
   email      String?     @unique
   phone      String?     @unique
-  adress     String
+  address    String
   membership Membership?
   payments   Payments[]
 
@@ -91,11 +91,11 @@ model Packages {
 
 model Payments {
   id         String   @id @default(uuid())
-  user_id    String   @unique
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  member_id  String   @unique
+  staff_id   String
+  staff      User     @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+  member_id  String
   member     Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
-  package_id String   @unique
+  package_id String
   package    Packages @relation(fields: [package_id], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())

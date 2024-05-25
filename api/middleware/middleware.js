@@ -44,14 +44,14 @@ module.exports = {
   },
   isAdmin: (req, res, next) => {
     try {
-      if (req.user_data.role !== "ADMIN") {
-        return res.status(401).json({
-          status: 401,
-          message: "Access denied for Admin. You dont have permission to the resource",
-          data: null,
-        });
+      if (req.user_data.role !== "ADMIN" || req.user_data.role !== "SUPERADMIN") {
+        return next();
       }
-      next();
+      return res.status(401).json({
+        status: 401,
+        message: "Access denied for Admin. You dont have permission to the resource",
+        data: null,
+      });
     } catch (error) {
       next(error);
     }

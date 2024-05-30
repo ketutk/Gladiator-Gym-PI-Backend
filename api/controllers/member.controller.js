@@ -5,17 +5,52 @@ const { JWT_SECRET } = process.env;
 
 exports.getMembers = async (req, res, next) => {
   try {
-    const users = await prisma.member.findMany({
+    // Extract query parameters, with default values of page=1 and pageSize=10
+    const { page = 1, status, name } = req.query;
+    const pageSize = 10;
+
+    // Calculate the number of items to skip based on the current page
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+    const whereClause = {};
+    if (name) {
+      whereClause.name = {
+        contains: name,
+        mode: "insensitive",
+      };
+    }
+    if (status) {
+      whereClause.membership = {
+        status: status === "true",
+      };
+    }
+
+    // Fetch the items from the database using Prisma, applying pagination
+    const member = await prisma.member.findMany({
+      where: whereClause,
+      skip: skip,
+      take: parseInt(pageSize),
       include: {
         membership: true,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
+    // Get the total number of items for pagination purposes
+    const totalItems = await prisma.member.count({
+      where: whereClause,
+    });
+    const totalPages = Math.ceil(totalItems / pageSize);
     return res.status(200).json({
       status: true,
       message: "Successfully get members data",
       data: {
-        users,
+        member,
+        page: parseInt(page),
+        total_page: totalPages,
+        total_items: totalItems,
       },
     });
   } catch (error) {
@@ -27,11 +62,37 @@ exports.createMember = async (req, res, next) => {
   try {
     const { name, email, phone, address } = req.body;
 
-    if (!name || !email || !phone || !address) {
+    if (!name || (!email && !phone) || !address) {
       return res.status(400).json({
         status: false,
         message: "Missing required field",
         data: null,
+      });
+    }
+    const or = [];
+
+    if (phone !== "") {
+      or.push({
+        phone,
+      });
+    }
+    if (email !== "") {
+      or.push({
+        email,
+      });
+    }
+
+    const isExist = await prisma.member.findMany({
+      where: {
+        OR: or,
+      },
+    });
+
+    if (isExist.length !== 0) {
+      return res.status(400).json({
+        status: false,
+        message: "Email or Phone already used",
+        data: isExist,
       });
     }
 
@@ -41,6 +102,12 @@ exports.createMember = async (req, res, next) => {
         email,
         phone,
         address,
+        membership: {
+          create: {},
+        },
+      },
+      include: {
+        membership: true,
       },
     });
 

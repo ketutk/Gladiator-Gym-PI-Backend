@@ -64,11 +64,11 @@ model Member {
 }
 
 model Membership {
-  id           String   @id @default(uuid())
-  member_id    String   @unique
-  member       Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
-  status       Boolean
-  active_until DateTime
+  id           String    @id @default(uuid())
+  member_id    String    @unique
+  member       Member    @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  status       Boolean   @default(false)
+  active_until DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -91,8 +91,8 @@ model Packages {
 
 model Payments {
   id         String   @id @default(uuid())
-  staff_id   String
-  staff      User     @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+  staff_id   String?
+  staff      User?    @relation(fields: [staff_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
   member_id  String
   member     Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
   package_id String

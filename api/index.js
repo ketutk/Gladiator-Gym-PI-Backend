@@ -31,7 +31,8 @@ app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).json({
     status: false,
-    message: err.message,
+    message: "Server Error, Failed to process",
+    error: err.message,
     data: null,
   });
 });

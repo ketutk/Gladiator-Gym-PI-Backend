@@ -12,8 +12,8 @@ async function UserSeeder() {
         profile: {
           create: {
             address: "BONANG",
-            phone: "08-",
-            ktp_id: "32-",
+            phone: "081348269789",
+            ktp_id: "320006798976578",
           },
         },
       },
@@ -25,8 +25,8 @@ async function UserSeeder() {
         profile: {
           create: {
             address: "BONANG",
-            phone: "08-",
-            ktp_id: "32-",
+            phone: "081348269256",
+            ktp_id: "320006798586978",
           },
         },
       },

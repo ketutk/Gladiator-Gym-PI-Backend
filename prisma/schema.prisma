@@ -39,8 +39,8 @@ model Profile {
   user_id String @unique
   user    User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
   address String
-  phone   String
-  ktp_id  String
+  phone   String @unique
+  ktp_id  String @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -90,13 +90,14 @@ model Packages {
 }
 
 model Payments {
-  id         String   @id @default(uuid())
-  staff_id   String?
-  staff      User?    @relation(fields: [staff_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
-  member_id  String
-  member     Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
-  package_id String
-  package    Packages @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid())
+  staff_id       String?
+  staff          User?    @relation(fields: [staff_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
+  member_id      String
+  member         Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  package_id     String
+  package        Packages @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  total_payments Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

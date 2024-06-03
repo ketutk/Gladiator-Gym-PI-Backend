@@ -215,6 +215,7 @@ exports.deleteUser = async (req, res, next) => {
     const user = await prisma.user.findUnique({
       where: {
         id,
+        role: "ADMIN",
       },
     });
 
@@ -229,6 +230,7 @@ exports.deleteUser = async (req, res, next) => {
     await prisma.user.delete({
       where: {
         id,
+        role: "ADMIN",
       },
     });
 
@@ -244,7 +246,73 @@ exports.deleteUser = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
   try {
-    const user = await prisma.user.findMany({});
+    // Extract query parameters, with default values of page=1 and pageSize=10
+    const { page = 1, s: search = "" } = req.query;
+    const pageSize = 10;
+
+    // Calculate the number of items to skip based on the current page
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+    let where = {};
+    if (search !== "") {
+      where = {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            profile: {
+              phone: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          },
+        ],
+      };
+    }
+
+    const user = await prisma.user.findMany({
+      skip: skip,
+      take: parseInt(pageSize),
+      where: {
+        role: "ADMIN",
+        ...where,
+      },
+      include: {
+        profile: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    // Get the total number of items for pagination purposes
+    const totalItems = await prisma.user.count({
+      where: {
+        role: "ADMIN",
+        ...where,
+      },
+    });
+    const totalPages = Math.ceil(totalItems / pageSize);
+    return res.status(200).json({
+      status: true,
+      message: "Successfully get members data",
+      data: {
+        user,
+        page: parseInt(page),
+        total_page: totalPages,
+        total_items: totalItems,
+      },
+    });
 
     return res.status(200).json({
       status: true,

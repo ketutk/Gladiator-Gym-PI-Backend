@@ -15,6 +15,11 @@ async function PackageSeed() {
         days_add: 90,
       },
       {
+        name: "6 Bulan Membership",
+        price: 1200000,
+        days_add: 180,
+      },
+      {
         name: "1 Tahun Membership",
         price: 2000000,
         days_add: 365,

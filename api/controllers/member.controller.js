@@ -58,6 +58,28 @@ exports.getMembers = async (req, res, next) => {
   }
 };
 
+exports.getAllMember = async (req, res, next) => {
+  try {
+    const members = await prisma.member.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+    });
+    return res.status(200).json({
+      status: true,
+      message: "Successfully get all members data",
+      data: {
+        members,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.createMember = async (req, res, next) => {
   try {
     const { name, email, phone, address } = req.body;
@@ -99,8 +121,8 @@ exports.createMember = async (req, res, next) => {
     const member = await prisma.member.create({
       data: {
         name,
-        email,
-        phone,
+        email: email || null,
+        phone: phone || null,
         address,
         membership: {
           create: {},
@@ -181,6 +203,53 @@ exports.deleteMemberById = async (req, res, next) => {
     return res.status(200).json({
       status: true,
       message: "Successfully delete member data",
+      data: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateMemberById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, address } = req.body;
+
+    if (!name || !address) {
+      return res.status(400).json({
+        status: false,
+        message: "Missing required field",
+        data: null,
+      });
+    }
+
+    const member = await prisma.member.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        status: false,
+        message: "Member not found",
+        data: null,
+      });
+    }
+
+    await prisma.member.update({
+      where: {
+        id,
+      },
+      data: {
+        name,
+        phone,
+        address,
+      },
+    });
+    return res.status(200).json({
+      status: true,
+      message: "Successfully update member data",
       data: null,
     });
   } catch (error) {

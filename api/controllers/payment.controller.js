@@ -6,7 +6,61 @@ const { JWT_SECRET } = process.env;
 
 exports.getPayments = async (req, res, next) => {
   try {
+    // Extract query parameters, with default values of page=1 and pageSize=10
+    const { page = 1, s: search = "", from, to } = req.query;
+    const pageSize = 10;
+
+    // Calculate the number of items to skip based on the current page
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+
+    const whereClause = {};
+
+    if (search !== "") {
+      whereClause.member = {
+        OR: [
+          {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            phone: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      };
+    }
+    if (from) {
+      const startOfDay = new Date(from);
+      startOfDay.setHours(0, 0, 0, 0);
+      whereClause.createdAt = {
+        gte: startOfDay,
+      };
+    }
+    if (to) {
+      const endOfDay = new Date(to);
+      endOfDay.setHours(23, 59, 59, 999);
+      whereClause.createdAt = {
+        ...whereClause.createdAt,
+        lte: endOfDay,
+      };
+    }
+
     const payments = await prisma.payments.findMany({
+      skip: skip,
+      take: parseInt(pageSize),
+      where: {
+        ...whereClause,
+      },
       include: {
         member: true,
         staff: true,
@@ -16,12 +70,20 @@ exports.getPayments = async (req, res, next) => {
         createdAt: "desc",
       },
     });
+    // Get the total number of items for pagination purposes
+    const totalItems = await prisma.payments.count({
+      where: whereClause,
+    });
+    const totalPages = Math.ceil(totalItems / pageSize);
 
     return res.status(200).json({
       status: true,
       message: "Successfully get payments data",
       data: {
         payments,
+        page: parseInt(page),
+        total_page: totalPages,
+        total_items: totalItems,
       },
     });
   } catch (error) {
@@ -154,6 +216,7 @@ exports.createPayment = async (req, res, next) => {
           staff_id: req.user_data.id,
           member_id: member.id,
           package_id: package.id,
+          total_payments: package.price,
         },
       }),
     ]);

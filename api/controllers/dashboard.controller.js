@@ -56,6 +56,9 @@ exports.getTransactions = async (req, res, next) => {
 exports.getTotalTransactions = async (req, res, next) => {
   try {
     const transactions = await prisma.payments.aggregate({
+      where: {
+        status: "settlement",
+      },
       _sum: {
         total_payments: true,
       },
@@ -91,6 +94,7 @@ exports.getTransactionsByPakcage = async (req, res, next) => {
       const total_payments = await prisma.payments.aggregate({
         where: {
           package_id: item.id,
+          status: "settlement",
         },
         _sum: {
           total_payments: true,

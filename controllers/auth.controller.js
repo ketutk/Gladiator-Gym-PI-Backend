@@ -2,6 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendVerifyEmail } = require("../libs/nodemailer");
+const { generateRandomString } = require("../libs/randomString");
 const { JWT_SECRET } = process.env;
 
 // function login
@@ -51,7 +53,18 @@ exports.login = async (req, res, next) => {
 
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, address, phone, ktp_id } = req.body;
+    const { token } = req.body;
+    let data;
+    try {
+      data = jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+      return res.status(400).json({
+        status: false,
+        message: "Token Invalid. Proses registrasi gagal",
+        data: null,
+      });
+    }
+    const { name, email, password, address, phone, ktp_id } = data;
 
     if (!name || !email || !password || !address || !phone || !ktp_id) {
       return res.status(400).json({
@@ -97,9 +110,56 @@ exports.register = async (req, res, next) => {
 
     return res.status(201).json({
       status: true,
-      message: "Successfully created account",
+      message: "Proses registrasi berhasil. Anda bisa login dengan akun anda.",
       data: {
         user: user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.sendVerifyAdmin = async (req, res, next) => {
+  try {
+    const { name, email, address, phone, ktp_id } = req.body;
+
+    if (!name || !email || !address || !phone || !ktp_id) {
+      return res.status(400).json({
+        status: false,
+        message: "Missing required field",
+        data: null,
+      });
+    }
+
+    const duplicate = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+
+    if (duplicate) {
+      return res.status(409).json({
+        status: false,
+        message: "Email already used",
+        data: null,
+      });
+    }
+    const password = generateRandomString();
+
+    const data = { name, email, password, address, phone, ktp_id };
+
+    const token = jwt.sign(data, JWT_SECRET, {
+      expiresIn: "15m",
+    });
+
+    await sendVerifyEmail(data, token);
+
+    return res.status(200).json({
+      status: true,
+      message: "Email berhasil terkirim. Silahkan cek email untuk melanjutkan proses registrasi.",
+      data: {
+        token,
       },
     });
   } catch (error) {

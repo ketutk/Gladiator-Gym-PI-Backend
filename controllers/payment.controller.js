@@ -378,32 +378,106 @@ exports.getPaymentById = async (req, res, next) => {
 };
 exports.getPaymentsMember = async (req, res, next) => {
   try {
-    const { member_id } = req.params;
+    const { email } = req.params;
+    // Extract query parameters, with default values of page=1 and pageSize=10
+    const { page = 1 } = req.query;
+    const pageSize = 10;
+
+    // Calculate the number of items to skip based on the current page
+    const skip = (parseInt(page) - 1) * parseInt(pageSize);
     const payments = await prisma.payments.findMany({
+      skip: skip,
+      take: pageSize,
       where: {
-        member_id: member_id,
+        member: {
+          email: email,
+        },
       },
       include: {
         staff: true,
         package: true,
+        member: true,
       },
       orderBy: {
         createdAt: "desc",
       },
     });
 
-    if (!payments) {
-      return res.status(404).json({
-        status: false,
-        message: "Payments not found",
-        data: null,
-      });
+    for (const item of payments) {
+      try {
+        if (item.status === "unsettled") {
+          continue;
+        }
+        const response = await coreApi.transaction.status(item.order_id);
+
+        if (response.transaction_status !== item.status) {
+          await prisma.payments.update({
+            where: {
+              id: item.id,
+            },
+            data: {
+              status: response.transaction_status,
+            },
+          });
+
+          if (response.transaction_status === "settlement") {
+            const member = await prisma.member.findUnique({
+              where: {
+                id: item.member_id,
+              },
+            });
+
+            const package = await prisma.packages.findUnique({
+              where: {
+                id: item.package_id,
+              },
+            });
+
+            if (member && package) {
+              const addDays = addMembershipsDays(member.membership.active_until, package.days_add);
+
+              await prisma.membership.upsert({
+                where: {
+                  member_id: member.id,
+                },
+                update: {
+                  status: true,
+                  active_until: addDays,
+                },
+                create: {
+                  member_id: member.id,
+                  status: true,
+                  active_until: addDays,
+                },
+              });
+            } else {
+              console.error(`Member or Package not found for item ID: ${item.id}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.error(`Error processing item ID ${item.id}:`, e.message);
+      }
     }
+
+    // Get the total number of items for pagination purposes
+    const totalItems = await prisma.payments.count({
+      where: {
+        member: {
+          email: email,
+        },
+      },
+    });
+
+    const totalPages = Math.ceil(totalItems / pageSize);
     return res.status(200).json({
       status: true,
       message: "Successfully get member payments data",
       data: {
         payments,
+        page: parseInt(page),
+        total_page: totalPages,
+        total_items: totalItems,
       },
     });
   } catch (error) {

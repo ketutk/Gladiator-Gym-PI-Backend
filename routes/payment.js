@@ -6,7 +6,7 @@ const router = express.Router();
 /* GET users listing. */
 router.get("/", middleware, isAdmin, getPayments);
 router.get("/:id", middleware, isAdmin, getPaymentById);
-router.get("/member/:member_id", middleware, isAdmin, getPaymentsMember);
+router.get("/member/:email", getPaymentsMember);
 router.post("/", middleware, isAdmin, createPayment);
 router.post("/notif", notification);
 

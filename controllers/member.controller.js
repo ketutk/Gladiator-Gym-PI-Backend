@@ -145,13 +145,13 @@ exports.createMember = async (req, res, next) => {
   }
 };
 
-exports.getMemberById = async (req, res, next) => {
+exports.getMemberByEmail = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { email } = req.params;
 
     const member = await prisma.member.findUnique({
       where: {
-        id,
+        email: email,
       },
       include: {
         membership: true,

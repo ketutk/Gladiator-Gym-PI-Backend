@@ -4,6 +4,6 @@ const { getPackages } = require("../controllers/package.controller");
 const router = express.Router();
 
 /* GET users listing. */
-router.get("/", middleware, isAdmin, getPackages);
+router.get("/", getPackages);
 
 module.exports = router;

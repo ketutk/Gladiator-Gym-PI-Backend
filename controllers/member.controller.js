@@ -14,10 +14,26 @@ exports.getMembers = async (req, res, next) => {
 
     const whereClause = {};
     if (name) {
-      whereClause.name = {
-        contains: name,
-        mode: "insensitive",
-      };
+      whereClause.OR = [
+        {
+          name: {
+            contains: name,
+            mode: "insensitive",
+          },
+        },
+        {
+          email: {
+            contains: name,
+            mode: "insensitive",
+          },
+        },
+        {
+          phone: {
+            contains: name,
+            mode: "insensitive",
+          },
+        },
+      ];
     }
     if (status) {
       whereClause.membership = {
@@ -84,7 +100,7 @@ exports.createMember = async (req, res, next) => {
   try {
     const { name, email, phone, address } = req.body;
 
-    if (!name || (!email && !phone) || !address) {
+    if (!name || !email || !address) {
       return res.status(400).json({
         status: false,
         message: "Missing required field",

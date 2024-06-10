@@ -8,6 +8,5 @@ router.get("/", middleware, isAdmin, getPayments);
 router.get("/:id", middleware, isAdmin, getPaymentById);
 router.get("/member/:email", getPaymentsMember);
 router.post("/", middleware, isAdmin, createPayment);
-router.post("/notif", notification);
 
 module.exports = router;

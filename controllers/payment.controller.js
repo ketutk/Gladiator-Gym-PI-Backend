@@ -16,7 +16,15 @@ const coreApi = new midtransClient.CoreApi({
 
 exports.createPayment = async (req, res, next) => {
   try {
-    const { member_id, package_id } = req.body;
+    const { member_id, package_id, payment_method } = req.body;
+
+    if (!member_id || !package_id || !payment_method) {
+      return res.status(400).json({
+        status: false,
+        message: "Missing required field",
+        data: null,
+      });
+    }
 
     const member = await prisma.member.findUnique({
       where: {
@@ -48,147 +56,37 @@ exports.createPayment = async (req, res, next) => {
       });
     }
 
-    const authString = btoa(`${process.env.SERVER_KEY}`);
-    const dataTransaction = {
-      transaction_details: {
-        order_id: `GLADIATOR-${Date.now()}-${member_id.split("-")[0]}`,
-        gross_amount: package.price,
-      },
-      item_details: [
-        {
-          id: package.id,
-          price: package.price,
-          quantity: 1,
-          name: package.name,
+    const addDays = addMembershipsDays(member?.membership?.active_until, package.days_add);
+
+    const [upsertMembership, createPayment] = await prisma.$transaction([
+      prisma.membership.update({
+        where: {
+          member_id: member_id,
         },
-      ],
-      customer_details: {
-        first_name: member.name,
-        email: member.email,
-        phone: member.phone,
-      },
-    };
-
-    const responseMidtrans = await axios.post(`${process.env.MIDTRANS_APP_URL}`, JSON.stringify(dataTransaction), {
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Basic ${authString}`,
-      },
-    });
-
-    const payment = await prisma.payments.create({
-      data: {
-        order_id: dataTransaction.transaction_details.order_id,
-        staff_id: req.user_data.id,
-        member_id: member.id,
-        package_id: package.id,
-        total_payments: package.price,
-        status: "unsettled",
-        url_redirect: `${responseMidtrans.data.redirect_url}#/other-qris`,
-      },
-    });
+        data: {
+          active_until: addDays,
+          status: true,
+        },
+      }),
+      prisma.payments.create({
+        data: {
+          member_id: member_id,
+          package_id: package.id,
+          staff_id: req.user_data.id,
+          payment_method: payment_method,
+          total_payments: package.price,
+        },
+      }),
+    ]);
 
     return res.status(200).json({
       status: true,
       message: "Successfully create payments data",
       data: {
-        payment,
-        response: responseMidtrans.data,
+        payment: createPayment,
+        membership: upsertMembership,
       },
     });
-  } catch (error) {
-    if (error.response) {
-      // Log detailed error response from Midtrans without causing circular reference issues
-      console.error("Error response from Midtrans:", {
-        status: error.response.status,
-        data: error.response.data,
-      });
-    } else {
-      console.error("Axios error:", error.message);
-    }
-    next(error);
-  }
-};
-
-exports.notification = async (req, res, next) => {
-  try {
-    let response;
-    coreApi.transaction
-      .notification(req.body)
-      .then(async (status) => {
-        if (status.transaction_status == "settlement") {
-          console.log(req.body);
-          console.log(status);
-          const payment = await prisma.payments.findUnique({
-            where: {
-              order_id: req.body.order_id,
-            },
-          });
-
-          const member = await prisma.member.findUnique({
-            where: {
-              id: payment.member_id,
-            },
-          });
-
-          const package = await prisma.packages.findUnique({
-            where: {
-              id: payment.package_id,
-            },
-          });
-
-          const addDays = addMembershipsDays(member?.membership?.active_until, package.days_add);
-
-          const [upsertMembership, updatePayment] = await prisma.$transaction([
-            prisma.membership.upsert({
-              where: {
-                member_id: member.id,
-              },
-              update: {
-                status: true,
-                active_until: addDays,
-              },
-              create: {
-                member_id: member.id,
-                status: true,
-                active_until: addDays,
-              },
-            }),
-            prisma.payments.update({
-              where: {
-                order_id: req.body.order_id,
-              },
-              data: {
-                status: req.body.transaction_status,
-              },
-            }),
-          ]);
-          response = {
-            member: upsertMembership,
-            payment: updatePayment,
-          };
-        } else if (status.transaction_status == "expire" || status.transaction_status == "pending") {
-          response = await prisma.payments.update({
-            where: {
-              order_id: req.body.order_id,
-            },
-            data: {
-              status: req.body.transaction_status,
-            },
-          });
-        }
-        return res.status(200).json({
-          status: true,
-          message: "Successfully update payment",
-          data: {
-            response,
-          },
-        });
-      })
-      .catch((e) => {
-        console.log(e.message);
-      });
   } catch (error) {
     next(error);
   }
@@ -197,7 +95,7 @@ exports.notification = async (req, res, next) => {
 exports.getPayments = async (req, res, next) => {
   try {
     // Extract query parameters, with default values of page=1 and pageSize=10
-    const { page = 1, s: search = "", from, to, status } = req.query;
+    const { page = 1, s: search = "", from, to, pm: payment_method } = req.query;
     const pageSize = 10;
 
     // Calculate the number of items to skip based on the current page
@@ -244,8 +142,8 @@ exports.getPayments = async (req, res, next) => {
         lte: endOfDay,
       };
     }
-    if (status) {
-      whereClause.status = status;
+    if (payment_method) {
+      whereClause.payment_method = payment_method;
     }
 
     const payments = await prisma.payments.findMany({
@@ -263,63 +161,6 @@ exports.getPayments = async (req, res, next) => {
         createdAt: "desc",
       },
     });
-
-    for (const item of payments) {
-      try {
-        if (item.status === "unsettled") {
-          continue;
-        }
-        const response = await coreApi.transaction.status(item.order_id);
-
-        if (response.transaction_status !== item.status) {
-          await prisma.payments.update({
-            where: {
-              id: item.id,
-            },
-            data: {
-              status: response.transaction_status,
-            },
-          });
-
-          if (response.transaction_status === "settlement") {
-            const member = await prisma.member.findUnique({
-              where: {
-                id: item.member_id,
-              },
-            });
-
-            const package = await prisma.packages.findUnique({
-              where: {
-                id: item.package_id,
-              },
-            });
-
-            if (member && package) {
-              const addDays = addMembershipsDays(member.membership.active_until, package.days_add);
-
-              await prisma.membership.upsert({
-                where: {
-                  member_id: member.id,
-                },
-                update: {
-                  status: true,
-                  active_until: addDays,
-                },
-                create: {
-                  member_id: member.id,
-                  status: true,
-                  active_until: addDays,
-                },
-              });
-            } else {
-              console.error(`Member or Package not found for item ID: ${item.id}`);
-            }
-          }
-        }
-      } catch (e) {
-        console.error(`Error processing item ID ${item.id}:`, e.message);
-      }
-    }
 
     // Get the total number of items for pagination purposes
     const totalItems = await prisma.payments.count({
@@ -402,63 +243,6 @@ exports.getPaymentsMember = async (req, res, next) => {
         createdAt: "desc",
       },
     });
-
-    for (const item of payments) {
-      try {
-        if (item.status === "unsettled") {
-          continue;
-        }
-        const response = await coreApi.transaction.status(item.order_id);
-
-        if (response.transaction_status !== item.status) {
-          await prisma.payments.update({
-            where: {
-              id: item.id,
-            },
-            data: {
-              status: response.transaction_status,
-            },
-          });
-
-          if (response.transaction_status === "settlement") {
-            const member = await prisma.member.findUnique({
-              where: {
-                id: item.member_id,
-              },
-            });
-
-            const package = await prisma.packages.findUnique({
-              where: {
-                id: item.package_id,
-              },
-            });
-
-            if (member && package) {
-              const addDays = addMembershipsDays(member.membership.active_until, package.days_add);
-
-              await prisma.membership.upsert({
-                where: {
-                  member_id: member.id,
-                },
-                update: {
-                  status: true,
-                  active_until: addDays,
-                },
-                create: {
-                  member_id: member.id,
-                  status: true,
-                  active_until: addDays,
-                },
-              });
-            } else {
-              console.error(`Member or Package not found for item ID: ${item.id}`);
-            }
-          }
-        }
-      } catch (e) {
-        console.error(`Error processing item ID ${item.id}:`, e.message);
-      }
-    }
 
     // Get the total number of items for pagination purposes
     const totalItems = await prisma.payments.count({

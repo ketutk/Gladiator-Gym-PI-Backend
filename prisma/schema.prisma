@@ -11,13 +11,19 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL_PREVIEW")
+  url      = env("DATABASE_URL_PREVIEW_VERSION3")
   // directUrl = env("DIRECT_URL") // komentari jika menggunakan database local
 }
 
 enum ROLE {
   ADMIN
   SUPERADMIN
+}
+
+enum PAYMENT_METHOD {
+  DEBIT
+  CASH
+  TRANSFER
 }
 
 model User {
@@ -90,17 +96,15 @@ model Packages {
 }
 
 model Payments {
-  id             String   @id @default(uuid())
-  order_id       String   @unique
+  id             String         @id @default(uuid())
   staff_id       String?
-  staff          User?    @relation(fields: [staff_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
+  staff          User?          @relation(fields: [staff_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
   member_id      String
-  member         Member   @relation(fields: [member_id], references: [id], onDelete: Cascade)
+  member         Member         @relation(fields: [member_id], references: [id], onDelete: Cascade)
   package_id     String
-  package        Packages @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  package        Packages       @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  payment_method PAYMENT_METHOD
   total_payments Int
-  status         String
-  url_redirect   String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

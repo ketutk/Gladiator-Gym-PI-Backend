@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const jwt = require("jsonwebtoken");
+const { checkMembership } = require("../libs/checkMembership");
 const { JWT_SECRET } = process.env;
 
 exports.getMembers = async (req, res, next) => {
@@ -54,6 +55,25 @@ exports.getMembers = async (req, res, next) => {
       },
     });
 
+    let members = [];
+
+    for (const item of member) {
+      let member = item;
+      if (!item?.membership?.active_until || item?.membership?.status == false) {
+        members.push(member);
+        continue;
+      }
+      try {
+        const response = await checkMembership(item);
+        if (response) {
+          member.membership = response;
+        }
+        members.push(member);
+      } catch (error) {
+        throw error;
+      }
+    }
+
     // Get the total number of items for pagination purposes
     const totalItems = await prisma.member.count({
       where: whereClause,
@@ -63,7 +83,7 @@ exports.getMembers = async (req, res, next) => {
       status: true,
       message: "Successfully get members data",
       data: {
-        member,
+        members,
         page: parseInt(page),
         total_page: totalPages,
         total_items: totalItems,
@@ -181,11 +201,24 @@ exports.getMemberByEmail = async (req, res, next) => {
         data: null,
       });
     }
+    let memberData = member;
+
+    if (member?.membership?.active_until && member?.membership?.status == true) {
+      try {
+        const response = await checkMembership(memberData);
+        if (response) {
+          memberData.membership = response;
+        }
+      } catch (error) {
+        throw error;
+      }
+    }
+
     return res.status(201).json({
       status: true,
       message: "Successfully get member data",
       data: {
-        member,
+        member: memberData,
       },
     });
   } catch (error) {

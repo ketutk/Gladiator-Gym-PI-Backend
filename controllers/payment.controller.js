@@ -182,6 +182,74 @@ exports.getPayments = async (req, res, next) => {
     next(error);
   }
 };
+exports.getAllPayments = async (req, res, next) => {
+  try {
+    // Extract query parameters, with default values of page=1 and pageSize=10
+    const { from, to } = req.query;
+
+    const whereClause = {};
+
+    if (from) {
+      const startOfDay = new Date(from);
+      startOfDay.setHours(0, 0, 0, 0);
+      whereClause.createdAt = {
+        gte: startOfDay,
+      };
+    }
+    if (to) {
+      const endOfDay = new Date(to);
+      endOfDay.setHours(23, 59, 59, 999);
+      whereClause.createdAt = {
+        ...whereClause.createdAt,
+        lte: endOfDay,
+      };
+    }
+
+    const payments = await prisma.payments.findMany({
+      where: {
+        ...whereClause,
+      },
+      include: {
+        member: true,
+        staff: true,
+        package: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    let data = payments.map((item) => {
+      return {
+        member_name: item.member.name,
+        member_email: item.member.email,
+        member_phone: item.member.phone,
+        staff_name: item.staff.name,
+        staff_email: item.staff.email,
+        package: item.package.name,
+        total_payments: item.total_payments,
+        payment_method: item.payment_method,
+        payment_date: new Date(item.createdAt).toLocaleString(),
+      };
+    });
+
+    // Get the total number of items for pagination purposes
+    const totalItems = await prisma.payments.count({
+      where: whereClause,
+    });
+
+    return res.status(200).json({
+      status: true,
+      message: "Successfully get payments data",
+      data: {
+        data,
+        total_items: totalItems,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 exports.getPaymentById = async (req, res, next) => {
   try {
     const { id } = req.params;

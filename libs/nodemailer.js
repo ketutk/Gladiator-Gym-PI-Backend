@@ -1,21 +1,17 @@
-let { GOOGLE_REFRESH_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
-let { google } = require("googleapis");
-let oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+// let { GOOGLE_REFRESH_TOKEN, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = process.env;
+// let { google } = require("googleapis");
+// let oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
 const nodemailer = require("nodemailer");
 const ejs = require("ejs");
-oauth2Client.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
+// oauth2Client.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
 exports.sendVerifyEmail = async (userData, token) => {
   try {
-    const accessToken = await oauth2Client.getAccessToken();
+    // const accessToken = await oauth2Client.getAccessToken();
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        type: "OAuth2",
-        user: process.env.EMAIL_SENDER,
-        clientId: GOOGLE_CLIENT_ID,
-        clientSecret: GOOGLE_CLIENT_SECRET,
-        refreshToken: GOOGLE_REFRESH_TOKEN,
-        accessToken: accessToken,
+        user: process.env.EMAIL_SENDER, // Ganti dengan alamat email pengirim
+        pass: process.env.PW_EMAIL_SENDER, // Ganti dengan password email pengirim
       },
     });
 
@@ -43,16 +39,12 @@ exports.sendVerifyEmail = async (userData, token) => {
 
 exports.sendResetPassword = async (userData, token) => {
   try {
-    const accessToken = await oauth2Client.getAccessToken();
+    // const accessToken = await oauth2Client.getAccessToken();
     const transporter = nodemailer.createTransport({
       service: "Gmail",
       auth: {
-        type: "OAuth2",
-        user: process.env.EMAIL_SENDER,
-        clientId: GOOGLE_CLIENT_ID,
-        clientSecret: GOOGLE_CLIENT_SECRET,
-        refreshToken: GOOGLE_REFRESH_TOKEN,
-        accessToken: accessToken,
+        user: process.env.EMAIL_SENDER, // Ganti dengan alamat email pengirim
+        pass: process.env.PW_EMAIL_SENDER, // Ganti dengan password email pengirim
       },
     });
 

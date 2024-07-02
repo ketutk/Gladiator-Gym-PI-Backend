@@ -21,7 +21,7 @@ exports.createPayment = async (req, res, next) => {
     if (!member_id || !package_id || !payment_method) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field",
+        message: "Terdapat beberapa field kosong",
         data: null,
       });
     }
@@ -38,7 +38,7 @@ exports.createPayment = async (req, res, next) => {
     if (!member) {
       return res.status(404).json({
         status: false,
-        message: "Member not found",
+        message: "Member tidak ditemukan",
         data: null,
       });
     }
@@ -51,7 +51,7 @@ exports.createPayment = async (req, res, next) => {
     if (!package) {
       return res.status(404).json({
         status: false,
-        message: "Package not found",
+        message: "Package tidak ditemukan",
         data: null,
       });
     }
@@ -81,7 +81,7 @@ exports.createPayment = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully create payments data",
+      message: "Berhasil membuat data pembayaran",
       data: {
         payment: createPayment,
         membership: upsertMembership,
@@ -170,7 +170,7 @@ exports.getPayments = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get payments data",
+      message: "Berhasil mendapatkan data pembayaran",
       data: {
         payments,
         page: parseInt(page),
@@ -240,7 +240,7 @@ exports.getAllPayments = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get payments data",
+      message: "Berhasil mendapatkan data pembayaran",
       data: {
         data,
         total_items: totalItems,
@@ -270,13 +270,13 @@ exports.getPaymentById = async (req, res, next) => {
     if (!payments) {
       return res.status(404).json({
         status: false,
-        message: "Payments not found",
+        message: "Pembayaran tidak ditemukan",
         data: null,
       });
     }
     return res.status(200).json({
       status: true,
-      message: "Successfully get member payments data",
+      message: "Berhasil mendapatkan data pembayaran member",
       data: {
         payments,
       },
@@ -324,7 +324,7 @@ exports.getPaymentsMember = async (req, res, next) => {
     const totalPages = Math.ceil(totalItems / pageSize);
     return res.status(200).json({
       status: true,
-      message: "Successfully get member payments data",
+      message: "Berhasil mendapatkan data pembayaran member",
       data: {
         payments,
         page: parseInt(page),

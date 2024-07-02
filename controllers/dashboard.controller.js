@@ -7,7 +7,7 @@ exports.getMember = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get member data",
+      message: "Berhasil mendapatkan total member",
       data: {
         members,
       },
@@ -28,7 +28,7 @@ exports.getActiveMember = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get active member data",
+      message: "Berhasil mendapatkan total member aktif",
       data: {
         members,
       },
@@ -43,7 +43,7 @@ exports.getTransactions = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get transactions data",
+      message: "Berhasil mendapatkan jumlah transaksi",
       data: {
         transactions,
       },
@@ -63,7 +63,7 @@ exports.getTotalTransactions = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get transactions data",
+      message: "Berhasil mendapatkan total transaksi pembayaran",
       data: {
         transactions,
       },
@@ -109,7 +109,7 @@ exports.getTransactionsByPakcage = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get transactions data",
+      message: "Berhasil mendapatkan data transaksi per paket",
       data: {
         transactions,
       },

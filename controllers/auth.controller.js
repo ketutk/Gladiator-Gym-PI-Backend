@@ -14,7 +14,7 @@ exports.login = async (req, res, next) => {
     if (!email || !password) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field",
+        message: "Terdapat beberapa field kosong",
         data: null,
       });
     }
@@ -24,7 +24,7 @@ exports.login = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         status: false,
-        message: "Account not found.",
+        message: "Akun tidak ditemukan",
         data: null,
       });
     }
@@ -34,7 +34,7 @@ exports.login = async (req, res, next) => {
     if (!isPasswordCorrect) {
       return res.status(400).json({
         status: false,
-        message: "Invalid password.",
+        message: "Password salah",
         data: null,
       });
     }
@@ -43,7 +43,7 @@ exports.login = async (req, res, next) => {
     let token = jwt.sign(user, JWT_SECRET);
     return res.status(200).json({
       status: true,
-      message: "User logged in success",
+      message: "User berhasil login",
       data: { ...user, token },
     });
   } catch (error) {
@@ -60,7 +60,7 @@ exports.register = async (req, res, next) => {
     } catch (error) {
       return res.status(400).json({
         status: false,
-        message: "Token Invalid. Proses registrasi gagal",
+        message: "Token tidak valid. Proses registrasi gagal",
         data: null,
       });
     }
@@ -69,7 +69,7 @@ exports.register = async (req, res, next) => {
     if (!name || !email || !password || !address || !phone || !ktp_id) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field",
+        message: "Terdapat beberapa field kosong",
         data: null,
       });
     }
@@ -83,7 +83,7 @@ exports.register = async (req, res, next) => {
     if (duplicate) {
       return res.status(409).json({
         status: false,
-        message: "Email already used",
+        message: "Email sudah digunakan",
         data: null,
       });
     }
@@ -127,7 +127,7 @@ exports.sendVerifyAdmin = async (req, res, next) => {
     if (!name || !email || !address || !phone || !ktp_id) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field",
+        message: "Terdapat beberapa field kosong",
         data: null,
       });
     }
@@ -141,7 +141,7 @@ exports.sendVerifyAdmin = async (req, res, next) => {
     if (duplicate) {
       return res.status(409).json({
         status: false,
-        message: "Email already used",
+        message: "Email telah digunakan",
         data: null,
       });
     }
@@ -181,7 +181,7 @@ exports.whoami = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         status: false,
-        message: "Account not found.",
+        message: "Akun tidak ditemukan",
         data: null,
       });
     }
@@ -190,7 +190,7 @@ exports.whoami = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Success get data",
+      message: "Berhasil mendapatkan data",
       data: { user },
     });
   } catch (error) {
@@ -205,7 +205,7 @@ exports.profile = async (req, res, next) => {
     if (!name || !phone || !address) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field.",
+        message: "Terdapat beberapa field kosong.",
         data: null,
       });
     }
@@ -227,7 +227,7 @@ exports.profile = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully update profile.",
+      message: "Berhasil memperbarui profil",
       data: null,
     });
   } catch (error) {
@@ -242,7 +242,7 @@ exports.changePassword = async (req, res, next) => {
     if (!password) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field.",
+        message: "Terdapat beberapa field kosong.",
         data: null,
       });
     }
@@ -260,7 +260,7 @@ exports.changePassword = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully change password.",
+      message: "Berhasil memperbarui password",
       data: null,
     });
   } catch (error) {
@@ -282,7 +282,7 @@ exports.deleteUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         status: false,
-        message: "Account not found.",
+        message: "Akun tidak ditemukan",
         data: null,
       });
     }
@@ -296,7 +296,7 @@ exports.deleteUser = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully delete user",
+      message: "Berhasil menghapus data",
       data: null,
     });
   } catch (error) {
@@ -365,7 +365,7 @@ exports.getUsers = async (req, res, next) => {
     const totalPages = Math.ceil(totalItems / pageSize);
     return res.status(200).json({
       status: true,
-      message: "Successfully get members data",
+      message: "Berhasil mendapatkan data admin",
       data: {
         user,
         page: parseInt(page),
@@ -374,13 +374,13 @@ exports.getUsers = async (req, res, next) => {
       },
     });
 
-    return res.status(200).json({
-      status: true,
-      message: "Successfully get user data.",
-      data: {
-        user,
-      },
-    });
+    // return res.status(200).json({
+    //   status: true,
+    //   message: "Successfully get user data.",
+    //   data: {
+    //     user,
+    //   },
+    // });
   } catch (error) {
     next(error);
   }

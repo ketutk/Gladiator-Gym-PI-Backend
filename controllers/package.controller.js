@@ -17,7 +17,7 @@ exports.getPackages = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully get packages data",
+      message: "Berhasil mendapatkan data paket",
       data: {
         packages,
       },

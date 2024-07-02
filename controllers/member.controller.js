@@ -81,7 +81,7 @@ exports.getMembers = async (req, res, next) => {
     const totalPages = Math.ceil(totalItems / pageSize);
     return res.status(200).json({
       status: true,
-      message: "Successfully get members data",
+      message: "Berhasil mendapatkan data member",
       data: {
         members,
         page: parseInt(page),
@@ -106,7 +106,7 @@ exports.getAllMember = async (req, res, next) => {
     });
     return res.status(200).json({
       status: true,
-      message: "Successfully get all members data",
+      message: "Berhasil mendapatkan semua data member",
       data: {
         members,
       },
@@ -123,7 +123,7 @@ exports.createMember = async (req, res, next) => {
     if (!name || !email || !address) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field",
+        message: "Terdapat beberapa field kosong",
         data: null,
       });
     }
@@ -149,7 +149,7 @@ exports.createMember = async (req, res, next) => {
     if (isExist.length !== 0) {
       return res.status(400).json({
         status: false,
-        message: "Email or Phone already used",
+        message: "Email atau Telepon telah digunakan",
         data: isExist,
       });
     }
@@ -171,7 +171,7 @@ exports.createMember = async (req, res, next) => {
 
     return res.status(201).json({
       status: true,
-      message: "Successfully create member data",
+      message: "Berhasil membuat data member",
       data: {
         member,
       },
@@ -197,7 +197,7 @@ exports.getMemberByEmail = async (req, res, next) => {
     if (!member) {
       return res.status(404).json({
         status: false,
-        message: "Member not found",
+        message: "Member tidak ditemukan",
         data: null,
       });
     }
@@ -216,7 +216,7 @@ exports.getMemberByEmail = async (req, res, next) => {
 
     return res.status(201).json({
       status: true,
-      message: "Successfully get member data",
+      message: "Berhasil mendapatkan data member",
       data: {
         member: memberData,
       },
@@ -238,7 +238,7 @@ exports.deleteMemberById = async (req, res, next) => {
     if (!member) {
       return res.status(404).json({
         status: false,
-        message: "Member not found",
+        message: "Member tidak ditemukan",
         data: null,
       });
     }
@@ -251,7 +251,7 @@ exports.deleteMemberById = async (req, res, next) => {
 
     return res.status(200).json({
       status: true,
-      message: "Successfully delete member data",
+      message: "Berhasil menghapus data member",
       data: null,
     });
   } catch (error) {
@@ -267,7 +267,7 @@ exports.updateMemberById = async (req, res, next) => {
     if (!name || !address) {
       return res.status(400).json({
         status: false,
-        message: "Missing required field",
+        message: "Terdapat beberapa field kosong",
         data: null,
       });
     }
@@ -281,7 +281,7 @@ exports.updateMemberById = async (req, res, next) => {
     if (!member) {
       return res.status(404).json({
         status: false,
-        message: "Member not found",
+        message: "Member tidak ditemukan",
         data: null,
       });
     }
@@ -298,7 +298,7 @@ exports.updateMemberById = async (req, res, next) => {
     });
     return res.status(200).json({
       status: true,
-      message: "Successfully update member data",
+      message: "Berhasil memperbarui data member",
       data: null,
     });
   } catch (error) {

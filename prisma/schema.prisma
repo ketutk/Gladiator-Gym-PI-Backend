@@ -99,10 +99,10 @@ model Payments {
   id             String         @id @default(uuid())
   staff_id       String?
   staff          User?          @relation(fields: [staff_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
-  member_id      String
-  member         Member         @relation(fields: [member_id], references: [id], onDelete: Cascade)
-  package_id     String
-  package        Packages       @relation(fields: [package_id], references: [id], onDelete: Cascade)
+  member_id      String?
+  member         Member?        @relation(fields: [member_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
+  package_id     String?
+  package        Packages?      @relation(fields: [package_id], references: [id], onDelete: SetNull, onUpdate: SetNull)
   payment_method PAYMENT_METHOD
   total_payments Int
 

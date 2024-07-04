@@ -234,11 +234,22 @@ exports.deleteMemberById = async (req, res, next) => {
       where: {
         id,
       },
+      include: {
+        membership: true,
+      },
     });
     if (!member) {
       return res.status(404).json({
         status: false,
         message: "Member tidak ditemukan",
+        data: null,
+      });
+    }
+
+    if (member.membership.status) {
+      return res.status(400).json({
+        status: false,
+        message: "Member merupakan member aktif dan tidak dapat dihapus",
         data: null,
       });
     }

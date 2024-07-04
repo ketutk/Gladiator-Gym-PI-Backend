@@ -54,7 +54,7 @@ exports.sendResetPassword = async (userData, token) => {
     const mailOptions = {
       from: process.env.EMAIL_SENDER,
       to: userData.email,
-      subject: "NgeFly - Reset Password",
+      subject: "Gladiator Gym - Reset Password",
       html: html,
     };
 

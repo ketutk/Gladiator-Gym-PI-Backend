@@ -1,0 +1,5 @@
+runtime: nodejs20
+service: default
+
+vpc_access_connector:
+  name: "projects/gladiator-426214/locations/asia-southeast2/connectors/gladiatorgym"

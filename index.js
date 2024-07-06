@@ -7,7 +7,7 @@ const logger = require("morgan");
 const cors = require("cors");
 const fs = require("fs");
 
-const indexRouter = require("../routes/index");
+const indexRouter = require("./routes/index");
 
 const app = express();
 
@@ -46,6 +46,7 @@ app.use((req, res, next) => {
   });
 });
 
-app.listen(3000, () => console.log("Server ready on port 3000."));
+const PORT = process.env.PORT;
+app.listen(PORT, () => console.log(`Server ready on port ${PORT}.`));
 
 module.exports = app;

@@ -74,16 +74,42 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    const duplicate = await prisma.user.findUnique({
-      where: {
-        email: email,
-      },
-    });
+    const [duplicateMail, duplicatePhone, duplicateId] = await Promise.all([
+      prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      }),
+      prisma.profile.findUnique({
+        where: {
+          phone: phone,
+        },
+      }),
+      prisma.profile.findUnique({
+        where: {
+          ktp_id: ktp_id,
+        },
+      }),
+    ]);
 
-    if (duplicate) {
+    if (duplicateMail) {
       return res.status(409).json({
         status: false,
         message: "Email sudah digunakan",
+        data: null,
+      });
+    }
+    if (duplicatePhone) {
+      return res.status(409).json({
+        status: false,
+        message: "Nomor telepon sudah digunakan",
+        data: null,
+      });
+    }
+    if (duplicateId) {
+      return res.status(409).json({
+        status: false,
+        message: "NIK atau Nomor KTP sudah digunakan",
         data: null,
       });
     }
@@ -132,16 +158,42 @@ exports.sendVerifyAdmin = async (req, res, next) => {
       });
     }
 
-    const duplicate = await prisma.user.findUnique({
-      where: {
-        email: email,
-      },
-    });
+    const [duplicateMail, duplicatePhone, duplicateId] = await Promise.all([
+      prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      }),
+      prisma.profile.findUnique({
+        where: {
+          phone: phone,
+        },
+      }),
+      prisma.profile.findUnique({
+        where: {
+          ktp_id: ktp_id,
+        },
+      }),
+    ]);
 
-    if (duplicate) {
+    if (duplicateMail) {
       return res.status(409).json({
         status: false,
-        message: "Email telah digunakan",
+        message: "Email sudah digunakan",
+        data: null,
+      });
+    }
+    if (duplicatePhone) {
+      return res.status(409).json({
+        status: false,
+        message: "Nomor telepon sudah digunakan",
+        data: null,
+      });
+    }
+    if (duplicateId) {
+      return res.status(409).json({
+        status: false,
+        message: "NIK atau Nomor KTP sudah digunakan",
         data: null,
       });
     }

@@ -1,15 +1,33 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-exports.getMember = async (req, res, next) => {
+exports.getDashboardData = async (req, res, next) => {
   try {
-    const members = await prisma.member.count({});
+    const [members, active_members, payments_count, payments_sum] = await Promise.all([
+      prisma.member.count({}),
+      prisma.member.count({
+        where: {
+          membership: {
+            status: true,
+          },
+        },
+      }),
+      prisma.payments.count({}),
+      prisma.payments.aggregate({
+        _sum: {
+          total_payments: true,
+        },
+      }),
+    ]);
 
     return res.status(200).json({
       status: true,
-      message: "Berhasil mendapatkan total member",
+      message: "Berhasil mendapatkan data",
       data: {
         members,
+        active_members,
+        payments_count,
+        payments_sum,
       },
     });
   } catch (error) {
@@ -52,7 +70,6 @@ exports.getTransactions = async (req, res, next) => {
     next(error);
   }
 };
-
 exports.getTotalTransactions = async (req, res, next) => {
   try {
     const transactions = await prisma.payments.aggregate({
